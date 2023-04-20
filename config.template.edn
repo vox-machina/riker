@@ -1,0 +1,13 @@
+{
+  :irc-servers {
+    :libera {
+      :uri "your.irc.server"
+      :port 6667
+      :name "Your bot full name"
+      :nick "yourbotnick"
+    }
+  }
+  :channel "#yourchannel"
+  :port 5001
+  :version #include "version.edn"
+}

@@ -1,0 +1,219 @@
+/*
+ * Side navigation
+ *
+ * Scrollspy and affixed enhanced navigation to highlight sections and secondary
+ * sections of docs content.
+ */
+
+ body {
+    margin: 70px auto 0px auto;
+  }
+  
+  section {
+    margin-bottom: 30px;
+  }
+  
+  article {
+    margin-top: 10px;
+  }
+  
+  /* By default it's not affixed in mobile views, so undo that */
+  .bs-sidebar-affix {
+    position: static;
+    margin-top: 10px;
+  }
+  
+  /* First level of nav */
+  .bs-sidenav {
+    margin-bottom: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-color: #f7f5fa;
+    border-radius: 5px;
+  }
+  
+  /* All levels of nav */
+  .bs-sidebar .nav > li > a {
+    display: block;
+    outline: 0;
+    color: #716b7a;
+    padding: 5px 10px;
+    word-wrap: auto;
+    -webkit-hyphens: auto;
+      -moz-hyphens: auto;
+      hyphens: auto;
+  }
+  .bs-sidebar .nav > li > a:hover,
+  .bs-sidebar .nav > li > a:focus {
+    text-decoration: none;
+    background-color: #e5e3e9;
+    border-right: 1px solid #dbd8e0;
+    border-top: none;
+    border-bottom: none;
+  }
+  .bs-sidebar .nav > li > a.active,
+  .bs-sidebar .nav > li > a.active:hover,
+  .bs-sidebar .nav > li > a.active:focus {
+    font-weight: bold;
+    color: #563d7c;
+    background-color: transparent;
+    border-right: 1px solid #563d7c;
+    border-top: none !important;
+    border-bottom: none;
+  }
+  
+  /* Nav: second level (shown on .active) */
+  .bs-sidebar .nav .nav {
+    display: none; /* Hide by default, but at >768px, show it */
+    margin-bottom: 8px;
+  }
+  .bs-sidebar .nav .nav > li > a {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 30px;
+    font-size: 90%;
+  }
+  
+  pre {
+    white-space: pre-wrap;       /* css-3 */
+    white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    padding: 0.5rem;
+    /*background-color: #f7f7f9;*/
+  }
+
+  /*pre {border: 0; background-color: transparent;}*/
+  
+  .bd-clipboard {
+    position: relative;
+    float: right;
+  }
+  
+  .btn-clipboard {
+    position: absolute;
+    top: .4rem;
+    right: .6rem;
+    z-index: 10;
+    display: block;
+    padding: .25rem .5rem;
+    font-size: 75%;
+    color: #818a91;
+    cursor: pointer;
+    background-color: #f7f7f9;
+    border-color: #f7f7f9;260
+  }
+  
+  ol.nav, ul.nav {
+    margin-bottom: 0px !important;
+  }
+  
+  .nav ul, ol {
+    margin-bottom: 0px !important;
+  }
+  
+  /* Make bottom nav link accessible - page-header overlaps on small screens */
+  div.col-lg-3 {
+    z-index: 2;
+  }
+  
+  section div.page-header {
+    padding-top: 68px;
+    margin-top: -68px;
+  }
+  
+  .example {
+    float: left;
+    width: 350px;
+    margin: 20px;
+    height: 430px;
+  }
+  
+  a.wrap-screenshot {
+    display:block;
+    height: 320px;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: .25rem;
+    opacity: 0.75;
+    -webkit-transition: border .2s ease-in-out;
+    -o-transition: border .2s ease-in-out;
+    transition: border .2s ease-in-out;
+  }
+  
+  a.wrap-screenshot:hover,
+  a.wrap-screenshot:focus {
+    border-color: #0056b3;
+    opacity: 1;
+  }
+  
+  
+  .screenshot {
+    width: 1000px;
+    height: 1000px;
+    border: none;
+    overflow: hidden;
+    -ms-zoom: 0.35;
+    -moz-transform: scale(0.35);
+    -moz-transform-origin: 0 0;
+    -o-transform: scale(0.35);
+    -o-transform-origin: 0 0;
+    -webkit-transform: scale(0.35);
+    -webkit-transform-origin: 0 0;
+    pointer-events: none;
+  }
+  
+  .row {
+    padding-bottom: 20px;
+  }
+  
+  -@media screen and (max-width: 450px) {
+    .jumbotron img {
+      max-width:100% !important;
+      max-height:100% !important;
+    }
+  }
+  
+  /* Show and affix the side nav when space allows it */
+  @media screen and (min-width: 992px) {
+    /* Widen the fixed sidebar */
+    .bs-sidebar-affix {
+      width: inherit;
+      padding-left: 0px;
+      padding-right: 30px;
+      width: 25%;
+    }
+    .bs-sidebar-affix {
+      position: fixed;
+      top: 60px;
+    }
+    .bs-sidenav {
+      max-height: 91vh;
+      overflow-y: auto;
+    }
+  }
+  
+  @media screen and (min-width: 1200px) {
+    .container-fluid {
+      width: 1170px;
+    }
+    /* Widen the fixed sidebar */
+    .bs-sidebar-affix {
+      width: 293px;
+    }
+  }
+  
+  ul.list-horizontal li {
+    display: inline;
+  }
+  
+  .card { margin-top: 20px; }
+
+  .mirror-info { margin-top: 20px; }
+  
+  li.post, li.article { margin-left: 10px; }
+
+  li.thread { margin-left: 40px; }
+  

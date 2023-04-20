@@ -1,0 +1,6 @@
+.cpcache
+.DS_Store
+config.edn
+version.edn
+riker-state.clj
+logs
