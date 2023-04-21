@@ -1,6 +1,7 @@
 (ns app.core
   (:require [clojure.data.json :as json]
             [clojure.pprint :as pp]
+            [clojure.string :refer [join split trim]]
             [clojure.walk :refer [keywordize-keys]]
             [aero.core :refer (read-config)]
             [io.pedestal.http :as http]
@@ -10,9 +11,12 @@
             [ring.util.response :refer [response]]
             [hiccup.page :refer [html5]]
             [java-time.api :as jt]
-            [alandipert.enduro :as e])
+            [babashka.fs :as fs]
+            [alandipert.enduro :as e]
+            [clj-meme.core :refer [generate-image!]])
   (:import (java.net Socket)
-           (java.io PrintWriter InputStreamReader BufferedReader)))
+           (java.io PrintWriter InputStreamReader BufferedReader)
+           (java.util UUID)))
 
 ;; Config and constants
 ;; =============================================================================
@@ -23,6 +27,7 @@
 (def start-inst (jt/instant))
 (declare conn-handler)
 (def data-path "resources/public/data")
+(def images-path "resources/public/data/images")
 (def state (e/file-atom {:signals-count 0} "riker-state.clj"))
 
 ;; Utility functions
@@ -33,6 +38,22 @@
   (spit (java.io.File. f-name) (with-out-str (pp/write xs :dispatch pp/code-dispatch))))
 
 (defn- uptime-by-unit [unit] (jt/as (jt/duration start-inst (jt/instant)) unit))
+
+(defn- meme-templates []
+  (let [templates (map fs/file-name (fs/glob (str images-path "/meme/templates") "**{.*}"))]
+    (join " " templates)))
+
+(defn- make-meme [msg]
+  (let [words (split msg #" ")
+        template (nth words 5)
+        label-all (second (split msg (re-pattern template)))
+        labels (split label-all #"\^")
+        meme (str images-path "/meme/memes/" (UUID/randomUUID) ".png")]
+    (generate-image! (str images-path "/meme/templates/" template)
+                     (trim (first labels))
+                     (trim (last labels))
+                     meme)
+    (str (:site-root cfg) (last (split meme #"resources/public/")))))
 
 ;; IRC integration
 ;; =============================================================================
@@ -62,7 +83,9 @@
        (re-find #"hi rikerbot" msg)           (write conn "PRIVMSG #rossmcd ohai")
        (re-find #"uptime days" msg)           (irc conn (uptime-by-unit :days))
        (re-find #"uptime minutes" msg)        (irc conn (uptime-by-unit :minutes))
-       (re-find #"!test-irc-signal" msg)      (do (e/swap! state update :signals-count inc) (irc conn ":signal conveyed to riker bot app"))))))
+       (re-find #"!test-irc-signal" msg)      (do (e/swap! state update :signals-count inc) (irc conn ":signal conveyed to riker bot app"))
+       (re-find #"meme templates" msg)        (irc conn (str ":" (meme-templates)))
+       (re-find #"make meme" msg)             (let [meme (make-meme msg)] (irc conn (str ":" meme)))))))
 
 (defn- login [conn user]
   (write conn (str "NICK " (:nick user)))

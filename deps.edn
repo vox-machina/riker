@@ -13,7 +13,9 @@
          org.slf4j/jcl-over-slf4j            {:mvn/version "2.0.6"}
          org.slf4j/log4j-over-slf4j          {:mvn/version "2.0.6"}
          hiccup/hiccup                       {:mvn/version "1.0.5"}
-         alandipert/enduro                   {:mvn/version "1.2.0"}}
+         babashka/fs                         {:mvn/version "0.2.16"}
+         alandipert/enduro                   {:mvn/version "1.2.0"}
+         clj-meme/clj-meme                   {:mvn/version "0.1.0"}}
   :aliases {
     ;; Run with clj -T:build function-in-build
     :build {:deps {io.github.clojure/tools.build {:git/tag "v0.9.4" :git/sha "76b78fe"}}

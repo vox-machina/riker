@@ -4,3 +4,5 @@ config.edn
 version.edn
 riker-state.clj
 logs
+resources/public/data/images/meme/*
+!resources/public/data/images/meme/README.md
