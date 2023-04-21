@@ -80,6 +80,7 @@
       (cond 
        (re-find #"^ERROR :Closing Link:" msg) (dosync (alter conn merge {:exit true}))
        (re-find #"^PING" msg)                 (write conn (str "PONG "  (re-find #":.*" msg)))
+       (re-find #"help" msg)                  (irc conn ":hi rikerbot, uptime days, uptime minutes, meme templates, make meme")
        (re-find #"hi rikerbot" msg)           (write conn "PRIVMSG #rossmcd ohai")
        (re-find #"uptime days" msg)           (irc conn (uptime-by-unit :days))
        (re-find #"uptime minutes" msg)        (irc conn (uptime-by-unit :minutes))
