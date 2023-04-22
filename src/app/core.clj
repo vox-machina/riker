@@ -1,6 +1,5 @@
 (ns app.core
   (:require [clojure.data.json :as json]
-            [clojure.pprint :as pp]
             [clojure.string :refer [join split trim]]
             [clojure.walk :refer [keywordize-keys]]
             [aero.core :refer (read-config)]
@@ -32,10 +31,6 @@
 
 ;; Utility functions
 ;; =============================================================================
-
-(defn- pretty-spit
-  [f-name xs]
-  (spit (java.io.File. f-name) (with-out-str (pp/write xs :dispatch pp/code-dispatch))))
 
 (defn- uptime-by-unit [unit] (jt/as (jt/duration start-inst (jt/instant)) unit))
 
@@ -105,8 +100,7 @@
    :enter (fn [ctx] (assoc-in ctx [:request :conn] conn))})
 
 (defn- github [req]
-  (let [headers (keywordize-keys (:headers req))
-        params (:params req)
+  (let [params (:params req)
         payload (keywordize-keys (json/read-str (:payload params)))
         repo (get-in payload [:repository :name])
         org (or (get-in payload [:organization :login]) "N/A")
