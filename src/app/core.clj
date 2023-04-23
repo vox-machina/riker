@@ -148,6 +148,12 @@
     [:script {:src "//code.jquery.com/jquery.js"}]
     [:script {:src "/js/bootstrap.min.js"}]])
 
+(defn- meme-list-items []
+  (let [memes (map str (fs/glob (str images-path "/meme/memes") "**{.*}"))]
+    (for [img memes]
+     [:li {:class "h-event thread list-group-item"}
+      [:img {:src (last (split img #"resources/public/"))}]])))
+
 (defn home [req]
 (response
  (html5
@@ -166,7 +172,8 @@
        [:li "uptime minutes"]]]]
     [:div {:class "card"}
      [:div {:class "card-header"} [:h2 "Latest creations"]]
-     [:div {:class "card-body"} "There are times where various interfaces (e.g. IRC) are not capable of displaying the content created with them (e.g. images) - this captures the most recent artefacts."]]])))) 
+     [:div {:class "card-body"} "There are times where various interfaces (e.g. IRC) are not capable of displaying the content created with them (e.g. images) - this captures the most recent artefacts."
+      [:ul {:class "list-group"} (meme-list-items)]]]])))) 
 
 (def routes
   #{["/"       :get  (conj htm-tors `home)]
