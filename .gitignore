@@ -5,4 +5,5 @@ version.edn
 riker-state.clj
 logs
 resources/public/data/images/meme/*
+resources/public/data/gps/*
 !resources/public/data/images/meme/README.md

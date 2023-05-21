@@ -10,5 +10,6 @@
   :channel "#yourchannel"
   :port 5001
   :site-root "http://111.111.1.11"
+  :gps-device-id "your_device_id"
   :version #include "version.edn"
 }

@@ -1,6 +1,7 @@
 (ns app.core
   (:require [clojure.data.json :as json]
-            [clojure.string :refer [join split trim]]
+            [clojure.pprint :as pp]
+            [clojure.string :refer [join replace split trim]]
             [clojure.walk :refer [keywordize-keys]]
             [aero.core :refer (read-config)]
             [io.pedestal.http :as http]
@@ -14,7 +15,7 @@
             [alandipert.enduro :as e]
             [clj-meme.core :refer [generate-image!]])
   (:import (java.net Socket)
-           (java.io PrintWriter InputStreamReader BufferedReader)
+           (java.io File PrintWriter InputStreamReader BufferedReader)
            (java.util UUID)))
 
 ;; Config and constants
@@ -49,6 +50,10 @@
                      (trim (last labels))
                      meme)
     (str (:site-root cfg) (last (split meme #"resources/public/")))))
+
+(defn- pretty-spit
+  [f-name xs]
+  (spit (File. f-name) (with-out-str (pp/write xs :dispatch pp/code-dispatch))))
 
 ;; IRC integration
 ;; =============================================================================
@@ -115,6 +120,18 @@
     (e/swap! state update :signals-count inc)
     {:status 200 :body "ok"}))
 
+(defn- gps [req]
+  (let [now (jt/local-date)
+        published (jt/format "yyyy-MM-dd" now)
+        date-pathfrag (replace published "-" "")
+        uid (str (UUID/randomUUID))
+        u-frag (first (split uid #"-"))
+        locations (get-in req [:json-params :locations])
+        id (get-in (first locations) [:properties :device_id])]
+    (when (= id (:gps-device-id cfg))
+      (pretty-spit (str data-path "/gps/" date-pathfrag "-" u-frag ".edn") {(keyword uid) locations})
+      {:status 200 :body "ok"})))
+
 (defn head []
   [:html [:head
    [:meta {:charset "utf-8"}]
@@ -177,7 +194,8 @@
 
 (def routes
   #{["/"       :get  (conj htm-tors `home)]
-    ["/github" :post (conj api-tors `github)]})
+    ["/github" :post (conj api-tors `github)]
+    ["/gps"     :post (conj api-tors `gps)]})
 
 ;; Server and entry point
 ;; =============================================================================
