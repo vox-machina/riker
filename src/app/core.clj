@@ -3,6 +3,7 @@
             [clojure.pprint :as pp]
             [clojure.string :refer [join replace split trim]]
             [clojure.walk :refer [keywordize-keys]]
+            [clojure.zip :as z]
             [aero.core :refer (read-config)]
             [io.pedestal.http :as http]
             [io.pedestal.http.body-params :refer [body-params]]
@@ -54,6 +55,12 @@
 (defn- pretty-spit
   [f-name xs]
   (spit (File. f-name) (with-out-str (pp/write xs :dispatch pp/code-dispatch))))
+
+(defn lookup-key [k coll]
+  (let [coll-zip (z/zipper coll? #(if (map? %) (vals %) %) nil coll)]
+    (loop [x coll-zip]
+      (when-not (z/end? x)
+        (if-let [v (-> x z/node k)] v (recur (z/next x)))))))
 
 ;; IRC integration
 ;; =============================================================================
@@ -126,11 +133,11 @@
         date-pathfrag (replace published "-" "")
         uid (str (UUID/randomUUID))
         u-frag (first (split uid #"-"))
-        locations (get-in req [:json-params :locations])
-        id (get-in (first locations) [:properties :device_id])]
+        locations (get-in req [:json-params])
+        id (lookup-key :device_id req)]
     (when (= id (:gps-device-id cfg))
       (pretty-spit (str data-path "/gps/" date-pathfrag "-" u-frag ".edn") {(keyword uid) locations})
-      {:status 200 :body "ok"})))
+      {:status 200 :body (json/write-str {:result "ok"}) :headers {"Content-Type" "application/json"}})))
 
 (defn head []
   [:html [:head
