@@ -29,7 +29,7 @@
 (declare conn-handler)
 (def data-path "resources/public/data")
 (def images-path "resources/public/data/images")
-(def state (e/file-atom {:signals-count 0} "riker-state.clj"))
+(def state (e/file-atom {:events-count 0} "riker-state.clj"))
 
 ;; Utility functions
 ;; =============================================================================
@@ -91,7 +91,7 @@
        (re-find #"hi rikerbot" msg)           (write conn "PRIVMSG #rossmcd ohai")
        (re-find #"uptime days" msg)           (irc conn (uptime-by-unit :days))
        (re-find #"uptime minutes" msg)        (irc conn (uptime-by-unit :minutes))
-       (re-find #"!test-irc-signal" msg)      (do (e/swap! state update :signals-count inc) (irc conn ":signal conveyed to riker bot app"))
+       (re-find #"!test-irc-event" msg)      (do (e/swap! state update :events-count inc) (irc conn ":event conveyed to riker bot app"))
        (re-find #"meme templates" msg)        (irc conn (str ":" (meme-templates)))
        (re-find #"make meme" msg)             (let [meme (make-meme msg)] (irc conn (str ":" meme)))))))
 
@@ -124,19 +124,25 @@
         provider (or (get-in payload [:sender :html_url]) "unknown")
         msg (str ":" provider " " action " " git-evt " at organisation : " org ", repository : " repo "\n")]
     (irc (:conn req) msg)
-    (e/swap! state update :signals-count inc)
+    (e/swap! state update :events-count inc)
     {:status 200 :body "ok"}))
 
 (defn- gps [req]
-  (let [now (jt/local-date)
+  (let [inst (jt/instant)
+        now (jt/local-date)
         published (jt/format "yyyy-MM-dd" now)
         date-pathfrag (replace published "-" "")
         uid (str (UUID/randomUUID))
         u-frag (first (split uid #"-"))
+        e-id (str (UUID/randomUUID))
+        e-frag (first (split e-id #"-"))
         locations (get-in req [:json-params])
         id (lookup-key :device_id req)]
     (when (= id (:gps-device-id cfg))
-      (pretty-spit (str data-path "/gps/" date-pathfrag "-" u-frag ".edn") {(keyword uid) locations})
+      (pretty-spit (str data-path "/gps/" date-pathfrag "-" u-frag ".edn") {:id (keyword uid) :payload locations})
+      (pretty-spit (str data-path "/events/" date-pathfrag "-" e-frag ".edn")
+        {:published (str inst) :eventId e-id :object (:gps-device-id cfg) :predicate "transmits GPS data" :category "gps"})
+      (e/swap! state update :events-count inc)
       {:status 200 :body (json/write-str {:result "ok"}) :headers {"Content-Type" "application/json"}})))
 
 (defn head []
@@ -168,7 +174,7 @@
     [:div {:class "container-fluid"}
     [:footer
       [:p
-      [:small "Riker Bot v" (get-in cfg [:version :riker]) ", uptime " (uptime-by-unit :days) " days, signals handled " (:signals-count @state)]]]]
+      [:small "Riker Bot v" (get-in cfg [:version :riker]) ", uptime " (uptime-by-unit :days) " days, events handled " (:events-count @state)]]]]
     [:script {:src "//code.jquery.com/jquery.js"}]
     [:script {:src "/js/bootstrap.min.js"}]])
 

@@ -6,4 +6,5 @@ riker-state.clj
 logs
 resources/public/data/images/meme/*
 resources/public/data/gps/*
+resources/public/data/events/*
 !resources/public/data/images/meme/README.md
