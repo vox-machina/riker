@@ -139,9 +139,33 @@
         locations (get-in req [:json-params])
         id (lookup-key :device_id req)]
     (when (= id (:gps-device-id cfg))
-      (pretty-spit (str data-path "/gps/" date-pathfrag "-" u-frag ".edn") {:id (keyword uid) :payload locations})
+      (pretty-spit (str data-path "/gps/" date-pathfrag "-" u-frag ".edn") {:id uid :payload locations})
       (pretty-spit (str data-path "/events/" date-pathfrag "-" e-frag ".edn")
         {:published (str inst) :eventId e-id :object (:gps-device-id cfg) :predicate "transmits GPS data" :category "gps"})
+      (e/swap! state update :events-count inc)
+      {:status 200 :body (json/write-str {:result "ok"}) :headers {"Content-Type" "application/json"}})))
+
+(defn- steps [req]
+  (let [inst (jt/instant)
+        now (jt/local-date)
+        published (jt/format "yyyy-MM-dd" now)
+        date-pathfrag (replace published "-" "")
+        uid (str (UUID/randomUUID))
+        u-frag (first (split uid #"-"))
+        e-id (str (UUID/randomUUID))
+        e-frag (first (split e-id #"-"))
+        params (keywordize-keys (:params req))
+        ;id (lookup-key :device_id req)
+        steps (get-in req [:query-params :count])
+        ]
+        ;(println "params : " params)
+    (when 
+      ;(= id (:gps-device-id cfg) ; TODO: figure out security string in watchy request to server (and how to POST from steps device)
+      (= 1 1)
+   ; )
+      (pretty-spit (str data-path "/steps/" date-pathfrag "-" u-frag ".edn") {:id uid :payload steps}) ;TBD arbitrary steps value
+      (pretty-spit (str data-path "/events/" date-pathfrag "-" e-frag ".edn")
+        {:published (str inst) :eventId e-id :object (:steps-device-id cfg) :predicate "transmits steps data" :category "steps"})
       (e/swap! state update :events-count inc)
       {:status 200 :body (json/write-str {:result "ok"}) :headers {"Content-Type" "application/json"}})))
 
@@ -208,7 +232,8 @@
 (def routes
   #{["/"       :get  (conj htm-tors `home)]
     ["/github" :post (conj api-tors `github)]
-    ["/gps"     :post (conj api-tors `gps)]})
+    ["/gps"     :post (conj api-tors `gps)]
+    ["/steps"   :get (conj api-tors `steps)]})
 
 ;; Server and entry point
 ;; =============================================================================
