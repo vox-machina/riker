@@ -163,7 +163,7 @@
       ;(= id (:gps-device-id cfg) ; TODO: figure out security string in watchy request to server (and how to POST from steps device)
       (= 1 1)
    ; )
-      (pretty-spit (str data-path "/steps/" date-pathfrag "-" u-frag ".edn") {:id uid :payload steps}) ;TBD arbitrary steps value
+      (pretty-spit (str data-path "/steps/" date-pathfrag "-" u-frag ".edn") {:id uid :payload steps})
       (pretty-spit (str data-path "/events/" date-pathfrag "-" e-frag ".edn")
         {:published (str inst) :eventId e-id :object (:steps-device-id cfg) :predicate "transmits steps data" :category "steps"})
       (e/swap! state update :events-count inc)
