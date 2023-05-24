@@ -1,5 +1,6 @@
 (ns app.core
   (:require [clojure.data.json :as json]
+            [clojure.edn :as edn]
             [clojure.pprint :as pp]
             [clojure.string :refer [join replace split trim]]
             [clojure.walk :refer [keywordize-keys]]
@@ -10,18 +11,23 @@
             [io.pedestal.interceptor :as intc]
             [io.pedestal.log :refer [debug info error]]
             [ring.util.response :refer [response]]
+            [org.httpkit.client :as client]
+            [org.httpkit.sni-client :as sni-client]
             [hiccup.page :refer [html5]]
             [java-time.api :as jt]
             [babashka.fs :as fs]
             [alandipert.enduro :as e]
-            [clj-meme.core :refer [generate-image!]])
+            [clj-meme.core :refer [generate-image!]]
+            [chime.core :as chime])
   (:import (java.net Socket)
            (java.io File PrintWriter InputStreamReader BufferedReader)
-           (java.util UUID)))
+           (java.util UUID)
+           (java.time Duration Instant LocalTime ZonedDateTime ZoneId Period)))
 
 ;; Config and constants
 ;; =============================================================================
 
+(alter-var-root #'org.httpkit.client/*default-client* (fn [_] sni-client/default-client))
 (def cfg (read-config "config.edn" {}))
 (def irc-servers (:irc-servers cfg))
 (def chan (:channel cfg))
@@ -61,6 +67,8 @@
     (loop [x coll-zip]
       (when-not (z/end? x)
         (if-let [v (-> x z/node k)] v (recur (z/next x)))))))
+
+(defn file->edn [file] (->> file slurp edn/read-string))
 
 ;; IRC integration
 ;; =============================================================================
@@ -167,12 +175,17 @@
       (pretty-spit (str data-path "/events/" date-pathfrag "-" e-frag ".edn")
         {:published (str inst) :eventId e-id :providerId {:id uid} :object (:steps-device-id cfg) :predicate "transmits steps data" :category "steps"})
       (e/swap! state update :events-count inc)
+      (let [uri "https://alerty.dev/api/notify"
+            options {:headers {"Authorization" (str "Bearer " (:alerty-api-key cfg))}
+                     :body (json/write-str {:title "Riker Daily Summary" :message (str "See summary at " (:site-root cfg) "daily-summaries/" date-pathfrag "-" e-frag)})}]
+              @(client/post uri options))
       {:status 200 :body (json/write-str {:result "ok"}) :headers {"Content-Type" "application/json"}})))
 
 (defn head []
   [:html [:head
    [:meta {:charset "utf-8"}]
    [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
+   [:link {:rel "microsub" :href (:microsub-uri cfg)}]
    [:link {:rel "stylesheet" :type "text/css" :href "/css/bootstrap.min.css"}]
    [:link {:rel "stylesheet" :type "text/css" :href "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"}]
    [:link {:rel "stylesheet" :type "text/css" :href "/css/style.css"}]
@@ -229,11 +242,34 @@
      [:div {:class "card-body"} "There are times where various interfaces (e.g. IRC) are not capable of displaying the content created with them (e.g. images) - this captures the most recent artefacts."
       [:ul {:class "list-group"} (meme-list-items)]]]])))) 
 
+(defn- daily-summary [req]
+  (let [x 1
+        inst (.toString (jt/instant))
+        id (get-in req [:path-params :summary-id])
+        steps (try (file->edn (str data-path "/events/" id ".edn")) (catch Throwable e nil))]
+    (println "steps : " steps)
+    (response
+     (html5
+      (head)
+      (body nil
+       [:div {:class "col-lg-9" :role "main"}
+    [:div {:class "card"}
+     [:div {:class "card-header"} [:h2 "Riker Bot Dashboard"]]
+     [:div {:class "card-body"}
+      [:h5 {:class "card-title"} "Daily event summary"]
+      [:p "Details on the events captured in the last 24 hours."]
+      [:article {:class "h-entry"}
+      [:div
+       [:pre {:class "e-content"} "A steps event was logged - TODO: detail data"]
+       "Published : "
+       [:a {:class "u-url" :href (str (:site-root cfg) "/daily-summaries/" id)} [:time {:class "dt-published" :datetime inst} inst]]]]]]])))))
+
 (def routes
   #{["/"       :get  (conj htm-tors `home)]
     ["/github" :post (conj api-tors `github)]
     ["/gps"     :post (conj api-tors `gps)]
-    ["/steps"   :get (conj api-tors `steps)]})
+    ["/steps"   :get (conj api-tors `steps)]
+    ["/daily-summaries/:summary-id" :get (conj htm-tors `daily-summary)]})
 
 ;; Server and entry point
 ;; =============================================================================
