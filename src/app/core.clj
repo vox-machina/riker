@@ -141,7 +141,7 @@
     (when (= id (:gps-device-id cfg))
       (pretty-spit (str data-path "/gps/" date-pathfrag "-" u-frag ".edn") {:id uid :payload locations})
       (pretty-spit (str data-path "/events/" date-pathfrag "-" e-frag ".edn")
-        {:published (str inst) :eventId e-id :object (:gps-device-id cfg) :predicate "transmits GPS data" :category "gps"})
+        {:published (str inst) :eventId e-id :providerId {:id uid} :object (:gps-device-id cfg) :predicate "transmits GPS data" :category "gps"})
       (e/swap! state update :events-count inc)
       {:status 200 :body (json/write-str {:result "ok"}) :headers {"Content-Type" "application/json"}})))
 
@@ -165,7 +165,7 @@
    ; )
       (pretty-spit (str data-path "/steps/" date-pathfrag "-" u-frag ".edn") {:id uid :payload steps})
       (pretty-spit (str data-path "/events/" date-pathfrag "-" e-frag ".edn")
-        {:published (str inst) :eventId e-id :object (:steps-device-id cfg) :predicate "transmits steps data" :category "steps"})
+        {:published (str inst) :eventId e-id :providerId {:id uid} :object (:steps-device-id cfg) :predicate "transmits steps data" :category "steps"})
       (e/swap! state update :events-count inc)
       {:status 200 :body (json/write-str {:result "ok"}) :headers {"Content-Type" "application/json"}})))
 
