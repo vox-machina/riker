@@ -1,25 +1,27 @@
 {
   :paths ["src" "config" "resources"]
-  :deps {clojure.java-time/clojure.java-time {:mvn/version "1.2.0"}
-         org.clojure/data.json               {:mvn/version "2.4.0"}
+  :deps {clojure.java-time/clojure.java-time {:mvn/version "1.4.2"}
+         org.clojure/data.json               {:mvn/version "2.5.0"}
          aero/aero                           {:mvn/version "1.1.6"}
-         http-kit                            {:mvn/version "2.6.0"}
-         io.pedestal/pedestal.service        {:mvn/version "0.5.10"}
-         io.pedestal/pedestal.route          {:mvn/version "0.5.10"}
-         io.pedestal/pedestal.jetty          {:mvn/version "0.5.11-beta-1"}
-         ch.qos.logback/logback-classic      {:mvn/version "1.4.5"
+         http-kit/http-kit                   {:mvn/version "2.7.0"}
+         io.pedestal/pedestal.service        {:mvn/version "0.6.3"}
+         io.pedestal/pedestal.route          {:mvn/version "0.6.3"}
+         io.pedestal/pedestal.jetty          {:mvn/version "0.6.3"}
+         ch.qos.logback/logback-classic      {:mvn/version "1.4.14"
                                               :exclusions [org.slf4j/slf4j-api]}
-         org.slf4j/slf4j-api                 {:mvn/version "2.0.6"}
-         org.slf4j/jul-to-slf4j              {:mvn/version "2.0.6"}
-         org.slf4j/jcl-over-slf4j            {:mvn/version "2.0.6"}
-         org.slf4j/log4j-over-slf4j          {:mvn/version "2.0.6"}
+         org.slf4j/slf4j-api                 {:mvn/version "2.0.11"}
+         org.slf4j/jul-to-slf4j              {:mvn/version "2.0.11"}
+         org.slf4j/jcl-over-slf4j            {:mvn/version "2.0.11"}
+         org.slf4j/log4j-over-slf4j          {:mvn/version "2.0.11"}
          hiccup/hiccup                       {:mvn/version "1.0.5"}
-         babashka/fs                         {:mvn/version "0.2.16"}
+         babashka/fs                         {:mvn/version "0.5.20"}
          alandipert/enduro                   {:mvn/version "1.2.0"}
          clj-meme/clj-meme                   {:mvn/version "0.1.0"}
-         jarohen/chime                       {:mvn/version "0.3.3"}}
+         jarohen/chime                       {:mvn/version "0.3.3"}
+         net.clojars.t_d_c/hiccup-server-components {:mvn/version "0.20.0"}
+         voxmachina/itui {:mvn/version "0.2.10"}}
   :aliases {
     ;; Run with clj -T:build function-in-build
-    :build {:deps {io.github.clojure/tools.build {:git/tag "v0.9.4" :git/sha "76b78fe"}}
+    :build {:deps {io.github.clojure/tools.build {:git/tag "v0.9.6" :git/sha "8e78bcc"}}
             :ns-default build}}
 }
