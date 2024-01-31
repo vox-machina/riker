@@ -111,6 +111,7 @@
          (form "logPersonal" "personal" "something to remember" "Personal log")
          (form "logProfessional" "professional" "something to remember" "Professional log")
          (form "logBookmark" "bookmark" "bookmark uri" "Bookmark log")
+         (form "logDiscoveries" "discovery" "something I discovered" "Discovery log")
          [:p "Commands available:"]
          [:ul
           [:li "hi rikerbot"]
