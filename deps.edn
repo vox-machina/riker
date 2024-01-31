@@ -19,6 +19,7 @@
          clj-meme/clj-meme                   {:mvn/version "0.1.0"}
          jarohen/chime                       {:mvn/version "0.3.3"}
          net.clojars.t_d_c/hiccup-server-components {:mvn/version "0.20.0"}
+         voxmachina/omnom                    {:mvn/version "0.1.13"}
          voxmachina/itui {:mvn/version "0.2.10"}}
   :aliases {
     ;; Run with clj -T:build function-in-build

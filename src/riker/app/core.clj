@@ -1,8 +1,9 @@
-(ns app.core
+(ns riker.app.core
   (:require [clojure.data.json :as json]
             [clojure.edn :as edn]
+            [clojure.java.io :refer [file reader]]
             [clojure.pprint :as pp]
-            [clojure.string :refer [join replace split trim]]
+            [clojure.string :refer [includes? join replace split trim]]
             [clojure.walk :refer [keywordize-keys]]
             [clojure.zip :as z]
             [aero.core :refer (read-config)]
@@ -12,7 +13,7 @@
             [io.pedestal.interceptor :as intc]
             [io.pedestal.log :refer [debug info error]]
             [ring.middleware.session.cookie :as cookie]
-            [ring.util.response :refer [response]]
+            [ring.util.response :refer [redirect response]]
             [org.httpkit.client :as client]
             [org.httpkit.sni-client :as sni-client]
             ;[hiccup.page :refer [html5]]
@@ -22,6 +23,7 @@
             [alandipert.enduro :as e]
             [clj-meme.core :refer [generate-image!]]
             [chime.core :as chime]
+            [omnom.generators.file :refer [pedestal-log->events]]
             [ui.layout :refer [page ses-tors]]
             [ui.components])
   (:import (java.net Socket)
@@ -92,6 +94,13 @@
       [:li {:class "h-event thread list-group-item"}
        [:img {:src (last (split img #"resources/public/"))}]])))
 
+(defn form [form-name input-name input-placeholder input-label]
+  [:form {:action "/log" :method "post" :name form-name}
+   [:input {:name input-name :id input-name :placeholder input-placeholder}]
+   [:input {:name "tags" :placeholder "tag1,tag2"}]
+   [:button {:type "submit"} "post"]
+   [:label {:for input-name} input-label]])
+
 ;;;; UI Views.
 ;;;; ===========================================================================
 
@@ -99,11 +108,19 @@
   (page session head body
         [:ui.l/card {} "Riker Bot Dashboard"
          [:p "Details on the version, uptime, commands and events handled by Riker Bot."]
+         (form "logPersonal" "personal" "something to remember" "Personal log")
+         (form "logProfessional" "professional" "something to remember" "Professional log")
+         (form "logBookmark" "bookmark" "bookmark uri" "Bookmark log")
          [:p "Commands available:"]
          [:ul
           [:li "hi rikerbot"]
           [:li "uptime days"]
           [:li "uptime minutes"]]]
+
+        [:ui.l/card {} "Latest Picard log entries"
+         [:ul
+          (for [x (pedestal-log->events "logs/my.log" "riker.app.core" "riker.app.core - ")]
+            [:li (:instant x) " " (:log x)])]]
 
         [:ui.l/card {} "Latest Creations"
          [:div "There are times where various interfaces (e.g. IRC) are not capable of displaying the content created with them (e.g. images) - this captures the most recent artefacts."
@@ -112,7 +129,19 @@
 ;;;; Routes, service, Server and app entry point.
 ;;;; ===========================================================================
 
-(def routes #{["/" :get (conj ses-tors `home)]})
+(defn log [{:keys [form-params] :as req}]
+  (let [entry (dissoc form-params :tags)
+        post-type (name (first (keys entry)))
+        log-type (keyword (str post-type "/log"))
+        log-tag (keyword (str post-type "-log"))
+        tag-str (:tags form-params)
+        tags-split (.split tag-str ",")
+        payload (assoc entry :tags (conj (into #{} (map #(keyword %) tags-split)) log-tag))]
+    (info log-type {:data payload})
+    (-> (redirect "/"))))
+
+(def routes #{["/"    :get  (conj ses-tors `home)]
+              ["/log" :post (conj ses-tors `log)]})
 
 (def service-map {
     ::http/secure-headers    {:content-security-policy-settings {:object-src "none"}}
@@ -124,5 +153,5 @@
     ::http/container-options {:h2c? true :h2?  false :ssl? false}})
 
 (defn -main [_]
-  (info :rikerbot/main (str "starting rikerbot v" (get-in cfg [:version :riker]) "...") )
+  (info :main/start (str "starting riker bot v" (get-in cfg [:version :riker]) "..."))
   (-> service-map http/create-server http/start))
