@@ -1,35 +1,24 @@
 (ns riker.app.core
-  (:require [clojure.data.json :as json]
-            [clojure.edn :as edn]
-            [clojure.java.io :refer [file reader]]
-            [clojure.pprint :as pp]
-            [clojure.string :refer [includes? join replace split trim]]
-            [clojure.walk :refer [keywordize-keys]]
-            [clojure.zip :as z]
+  (:require [clojure.pprint :as pp]
+            [clojure.string :refer [join split trim]]
             [aero.core :refer (read-config)]
             [io.pedestal.http :as http]
             [io.pedestal.http.body-params :refer [body-params]]
             [io.pedestal.http.ring-middlewares :as mw]
             [io.pedestal.interceptor :as intc]
             [io.pedestal.log :refer [debug info error]]
-            [ring.middleware.session.cookie :as cookie]
-            [ring.util.response :refer [redirect response]]
+            [ring.util.response :refer [redirect]]
             [org.httpkit.client :as client]
             [org.httpkit.sni-client :as sni-client]
-            ;[hiccup.page :refer [html5]]
             [ten-d-c.hiccup-server-components.core :refer [->html]]
             [java-time.api :as jt]
             [babashka.fs :as fs]
             [alandipert.enduro :as e]
             [clj-meme.core :refer [generate-image!]]
-            [chime.core :as chime]
             [omnom.generators.file :refer [pedestal-log->events]]
             [ui.layout :refer [page ses-tors]]
             [ui.components])
-  (:import (java.net Socket)
-           (java.io File PrintWriter InputStreamReader BufferedReader)
-           (java.util UUID)
-           (java.time Duration Instant LocalTime ZonedDateTime ZoneId Period)))
+  (:import (java.util UUID)))
 
 ;;;; Config and constants.
 ;;;; ===========================================================================
@@ -64,7 +53,7 @@
                      meme)
     (str (:site-root cfg) (last (split meme #"resources/public/")))))
 
-;;;; Service, webapp, API.
+;;;; UI Components.
 ;;;; ===========================================================================
 
 (defn head []
@@ -127,7 +116,7 @@
          [:div "There are times where various interfaces (e.g. IRC) are not capable of displaying the content created with them (e.g. images) - this captures the most recent artefacts."
           [:ul.list-group (meme-list-items)]]]))
 
-;;;; Routes, service, Server and app entry point.
+;;;; API.
 ;;;; ===========================================================================
 
 (defn log [{:keys [form-params] :as req}]
@@ -140,6 +129,9 @@
         payload (assoc entry :tags (conj (into #{} (map #(keyword %) tags-split)) log-tag))]
     (info log-type {:data payload})
     (-> (redirect "/"))))
+
+;;;; Routes, service, Server and app entry point.
+;;;; ===========================================================================
 
 (def routes #{["/"    :get  (conj ses-tors `home)]
               ["/log" :post (conj ses-tors `log)]})
