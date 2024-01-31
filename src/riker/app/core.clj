@@ -79,7 +79,7 @@
 
 (defn body [session & content]
   [:body
-    [:ui.l/navbar-simple {} "Riker Bot Dashboard"]
+    [:ui.l/navbar-simple {} "Riker"]
     [:div.container-fluid [:div.row [:div.col-lg-9 content]]]
     [:div.container-fluid
     [:footer
@@ -106,7 +106,7 @@
 
 (defn home [{:keys [session]}]
   (page session head body
-        [:ui.l/card {} "Riker Bot Dashboard"
+        [:ui.l/card {} "Dashboard"
          [:p "Details on the version, uptime, commands and events handled by Riker Bot."]
          (form "logPersonal" "personal" "something to remember" "Personal log")
          (form "logProfessional" "professional" "something to remember" "Professional log")
