@@ -3,6 +3,7 @@
 config.edn
 version.edn
 riker-state.clj
+riker.tgz
 logs
 resources/public/data/images/meme/*
 resources/public/data/gps/*
