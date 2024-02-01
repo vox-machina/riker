@@ -35,6 +35,11 @@
 ;;;; Utility functions.
 ;;;; ===========================================================================
 
+(defn picard-events []
+  (let [evts-filter #{:bookmark/log :discovery/log :personal/log :professional/log}
+        events (pedestal-log->events "logs/my.log" "riker.app.core" "riker.app.core - ")] 
+    (filter #(some #{(first (keys (:log %)))} evts-filter) events)))
+
 (defn- uptime-by-unit [unit] (jt/as (jt/duration start-inst (jt/instant)) unit))
 
 (defn- meme-templates []
@@ -85,10 +90,11 @@
 
 (defn form [form-name input-name input-placeholder input-label]
   [:form {:action "/log" :method "post" :name form-name}
-   [:input {:name input-name :id input-name :placeholder input-placeholder}]
-   [:input {:name "tags" :placeholder "tag1,tag2"}]
-   [:button {:type "submit"} "post"]
-   [:label {:for input-name} input-label]])
+   [:div.row
+    [:div.col [:label {:for input-name} input-label]]
+    [:div.col [:input {:name input-name :id input-name :placeholder input-placeholder}]] 
+    [:div.col [:input {:name "tags" :placeholder "tag1,tag2"}]] 
+    [:div.col [:button {:type "submit"} "post"]]]])
 
 ;;;; UI Views.
 ;;;; ===========================================================================
@@ -114,7 +120,7 @@
 
         [:ui.l/card {} "Latest Picard log entries"
          [:ul
-          (for [x (pedestal-log->events "logs/my.log" "riker.app.core" "riker.app.core - ")]
+          (for [x (picard-events)]
             [:li (:instant x) " " (:log x)])]]
 
         [:ui.l/card {} "Latest Creations"
