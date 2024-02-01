@@ -101,6 +101,11 @@
          (form "logProfessional" "professional" "something to remember" "Professional log")
          (form "logBookmark" "bookmark" "bookmark uri" "Bookmark log")
          (form "logDiscoveries" "discovery" "something I discovered" "Discovery log")
+         (form "logDigitalPurchase" "digital-purchase" "a digital purchase e.g. ebook" "Digital purchase log")
+         (form "logPhysicalPurchase" "physical-purchase" "a physical purchase e.g. device" "Physical purchase log")
+         (form "logSubscriptionPurchase" "subscription-purchase" "a subscription purchase e.g. emagazine or software licence" "Subscription purchase log")
+         (form "logFilmWatch" "film-watch" "a film I watched" "Film watch log")
+         (form "logSeriesWatch" "series-watch" "a series episode I watched" "Series watch log")
          [:p "Commands available:"]
          [:ul
           [:li "hi rikerbot"]
