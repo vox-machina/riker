@@ -119,9 +119,15 @@
           [:li "uptime minutes"]]]
 
         [:ui.l/card {} "Latest Picard log entries"
-         [:ul
-          (for [x (picard-events)]
-            [:li (:instant x) " " (:log x)])]]
+         [:table.table.table-striped
+          [:thead
+           [:tr
+            [:td {:scope "col"} "Event"]
+            [:td {:scope "col"} "Tags"]
+            [:td {:scope "col"} "Date-time"]]]
+          [:tbody 
+           (for [x (picard-events)]
+             [:tr [:td (first (vals (:data (first (vals (:log x))))))] [:td "tags"] [:td (:instant x)]])]]]
 
         [:ui.l/card {} "Latest Creations"
          [:div "There are times where various interfaces (e.g. IRC) are not capable of displaying the content created with them (e.g. images) - this captures the most recent artefacts."
