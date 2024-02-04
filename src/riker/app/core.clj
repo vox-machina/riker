@@ -96,6 +96,21 @@
     [:div.col [:input {:name "tags" :placeholder "tag1,tag2"}]] 
     [:div.col [:button {:type "submit"} "post"]]]])
 
+(defn events-table []
+  [:ui.l/card {} "Latest Picard log entries"
+         [:table.table.table-striped
+          [:thead
+           [:tr
+            [:td {:scope "col"} "Event"]
+            [:td {:scope "col"} "Tags"]
+            [:td {:scope "col"} "Date-time"]]]
+          [:tbody 
+           (for [{:keys [instant ns log]} (take 5 (reverse (picard-events))) :let [log-m (first (vals log))]]
+             [:tr
+              [:td (first (vals (:data log-m)))]
+              [:td [:ul (for [y (get-in log-m [:data :tags])] [:li y])]]
+              [:td instant]])]]])
+
 ;;;; UI Views.
 ;;;; ===========================================================================
 
@@ -117,18 +132,7 @@
           [:li "hi rikerbot"]
           [:li "uptime days"]
           [:li "uptime minutes"]]]
-
-        [:ui.l/card {} "Latest Picard log entries"
-         [:table.table.table-striped
-          [:thead
-           [:tr
-            [:td {:scope "col"} "Event"]
-            [:td {:scope "col"} "Tags"]
-            [:td {:scope "col"} "Date-time"]]]
-          [:tbody 
-           (for [x (picard-events)]
-             [:tr [:td (first (vals (:data (first (vals (:log x))))))] [:td "tags"] [:td (:instant x)]])]]]
-
+        (events-table) ; list most recent Picard log events
         [:ui.l/card {} "Latest Creations"
          [:div "There are times where various interfaces (e.g. IRC) are not capable of displaying the content created with them (e.g. images) - this captures the most recent artefacts."
           [:ul.list-group (meme-list-items)]]]))
