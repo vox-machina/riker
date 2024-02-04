@@ -14,9 +14,8 @@
             [java-time.api :as jt]
             [babashka.fs :as fs]
             [alandipert.enduro :as e]
-            [clj-meme.core :refer [generate-image!]]
             [omnom.generators.file :refer [pedestal-log->events]]
-            [ui.layout :refer [page ses-tors]]
+            [ui.layout :refer [page ses-tor]]
             [ui.components])
   (:import (java.util UUID)))
 
@@ -24,7 +23,7 @@
 ;;;; ===========================================================================
 
 (alter-var-root #'org.httpkit.client/*default-client* (fn [_] sni-client/default-client))
-(def cfg (read-config "config.edn" {}))
+(def config (read-config "config.edn" {}))
 
 (def start-inst (jt/instant))
 
@@ -34,34 +33,23 @@
 
 ;;;; Utility functions.
 ;;;; ===========================================================================
+(defn- uptime-by-unit [unit] (jt/as (jt/duration start-inst (jt/instant)) unit))
 
 (defn picard-events []
   (let [evts-filter #{:bookmark/log :discovery/log :personal/log :professional/log}
         events (pedestal-log->events "logs/my.log" "riker.app.core" "riker.app.core - ")] 
     (filter #(some #{(first (keys (:log %)))} evts-filter) events)))
 
-(defn- uptime-by-unit [unit] (jt/as (jt/duration start-inst (jt/instant)) unit))
+;;;; Service interceptors
+;;;; ===========================================================================
+(def cfg-tor {:name :cfg-tor :enter (fn [context] (assoc-in context [:request :cfg] config))})
 
-(defn- meme-templates []
-  (let [templates (map fs/file-name (fs/glob (str images-path "/meme/templates") "**{.*}"))]
-    (join " " templates)))
-
-(defn- make-meme [msg]
-  (let [words (split msg #" ")
-        template (nth words 5)
-        label-all (second (split msg (re-pattern template)))
-        labels (split label-all #"\^")
-        meme (str images-path "/meme/memes/" (UUID/randomUUID) ".png")]
-    (generate-image! (str images-path "/meme/templates/" template)
-                     (trim (first labels))
-                     (trim (last labels))
-                     meme)
-    (str (:site-root cfg) (last (split meme #"resources/public/")))))
+;(def common-tors [ses-tors cfg-tor])
 
 ;;;; UI Components.
 ;;;; ===========================================================================
 
-(defn head []
+(defn head [{:keys [cfg] :as req}]
   [:html [:head
           [:meta {:charset "utf-8"}]
           [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
@@ -71,7 +59,7 @@
           [:link {:rel "stylesheet" :type "text/css" :href "/css/style.css"}]
           [:title "Riker Bot Dashboard"]]])
 
-(defn body [session & content]
+(defn body [{:keys [cfg session] :as req} & content]
   [:body
     [:ui.l/navbar-simple {} "Riker"]
     [:div.container-fluid [:div.row [:div.col-lg-9 content]]]
@@ -82,12 +70,6 @@
     [:script {:src "//code.jquery.com/jquery.js"}]
     [:script {:src "/js/bootstrap.min.js"}]])
 
-(defn- meme-list-items []
-  (let [memes (map str (fs/glob (str images-path "/meme/memes") "**{.*}"))]
-    (for [img memes]
-      [:li {:class "h-event thread list-group-item"}
-       [:img {:src (last (split img #"resources/public/"))}]])))
-
 (defn form [form-name input-name input-placeholder input-label]
   [:form {:action "/log" :method "post" :name form-name}
    [:div.row
@@ -96,7 +78,7 @@
     [:div.col [:input {:name "tags" :placeholder "tag1,tag2"}]] 
     [:div.col [:button {:type "submit"} "post"]]]])
 
-(defn events-table []
+(defn events-table [{{:keys [:events-limit]} :cfg}]
   [:ui.l/card {} "Latest Picard log entries"
          [:table.table.table-striped
           [:thead
@@ -105,7 +87,7 @@
             [:td {:scope "col"} "Tags"]
             [:td {:scope "col"} "Date-time"]]]
           [:tbody 
-           (for [{:keys [instant ns log]} (take 5 (reverse (picard-events))) :let [log-m (first (vals log))]]
+           (for [{:keys [instant ns log]} (take events-limit (reverse (picard-events))) :let [log-m (first (vals log))]]
              [:tr
               [:td (first (vals (:data log-m)))]
               [:td [:ul (for [y (get-in log-m [:data :tags])] [:li y])]]
@@ -114,8 +96,8 @@
 ;;;; UI Views.
 ;;;; ===========================================================================
 
-(defn home [{:keys [session]}]
-  (page session head body
+(defn home [{:keys [cfg session] :as req}]
+  (page req head body
         [:ui.l/card {} "Dashboard"
          [:p "Details on the version, uptime, commands and events handled by Riker Bot."]
          (form "logPersonal" "personal" "something to remember" "Personal log")
@@ -127,15 +109,8 @@
          (form "logSubscriptionPurchase" "subscription-purchase" "a subscription purchase e.g. emagazine or software licence" "Subscription purchase log")
          (form "logFilmWatch" "film-watch" "a film I watched" "Film watch log")
          (form "logSeriesWatch" "series-watch" "a series episode I watched" "Series watch log")
-         [:p "Commands available:"]
-         [:ul
-          [:li "hi rikerbot"]
-          [:li "uptime days"]
-          [:li "uptime minutes"]]]
-        (events-table) ; list most recent Picard log events
-        [:ui.l/card {} "Latest Creations"
-         [:div "There are times where various interfaces (e.g. IRC) are not capable of displaying the content created with them (e.g. images) - this captures the most recent artefacts."
-          [:ul.list-group (meme-list-items)]]]))
+]
+        (events-table req)))
 
 ;;;; API.
 ;;;; ===========================================================================
@@ -154,18 +129,18 @@
 ;;;; Routes, service, Server and app entry point.
 ;;;; ===========================================================================
 
-(def routes #{["/"    :get  (conj ses-tors `home)]
-              ["/log" :post (conj ses-tors `log)]})
+(def routes #{["/"    :get  (conj ses-tor `cfg-tor `home)]
+              ["/log" :post (conj ses-tor `log)]})
 
-(def service-map {
-    ::http/secure-headers    {:content-security-policy-settings {:object-src "none"}}
-    ::http/routes            routes
-    ::http/type              :jetty
-    ::http/resource-path     "public"
-    ::http/host              "0.0.0.0"
-    ::http/port              (Integer. (or (:port cfg) 5001))
-    ::http/container-options {:h2c? true :h2?  false :ssl? false}})
+(defn service-map [{:keys [port]}]
+  {::http/secure-headers    {:content-security-policy-settings {:object-src "none"}}
+   ::http/routes            routes
+   ::http/type              :jetty
+   ::http/resource-path     "public"
+   ::http/host              "0.0.0.0"
+   ::http/port              (Integer. (or port 5001))
+   ::http/container-options {:h2c? true :h2?  false :ssl? false}})
 
 (defn -main [_]
-  (info :main/start (str "starting riker bot v" (get-in cfg [:version :riker]) "..."))
-  (-> service-map http/create-server http/start))
+  (info :main/start (str "starting riker bot v" (get-in config [:version :riker]) "..."))
+  (-> (service-map config) http/create-server http/start))
