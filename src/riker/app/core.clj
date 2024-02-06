@@ -108,23 +108,22 @@
          [:div.container
           [:div.row
            [:div.col (btn "/picard" "Personal" "personal" "something to remember")]
-           [:div.col (btn "/picard" "Professional" "professional" "something to remember")]
-           ]
+           [:div.col (btn "/picard" "Professional" "professional" "something to remember")]]
           [:div.row
            [:div.col (btn "/picard" "Bookmark" "bookmark" "bookmark uri")]
-           [:div.col (btn "/picard" "Discovery" "discovery" "something I discovered")]
-           ]
+           [:div.col (btn "/picard" "Discovery" "discovery" "something I discovered")]]
           [:div.row
            [:div.col (btn "/picard" "Digital purchase" "digital-purchase" "a digital purchase e.g. ebook")]
-           [:div.col (btn "/picard" "Physical purchase" "physical-purchase" "a physical purchase e.g. device")]
-           ]
+           [:div.col (btn "/picard" "Physical purchase" "physical-purchase" "a physical purchase e.g. device")]]
           [:div.row
-           [:div.col (btn "/picard" "Subscription purchase" "subscription-purchase" "a subscription purchase e.g. emagazine or software licence") ]
-           [:div.col (btn "/picard" "Film watch" "film-watch" "a film I watched") ]
-           ]
+           [:div.col (btn "/picard" "Subscription purchase" "subscription-purchase" "a subscription purchase e.g. emagazine or software licence")]
+           [:div.col (btn "/picard" "Film watch" "film-watch" "a film I watched")]]
           [:div.row
            [:div.col (btn "/picard" "Series watch" "series-watch" "a show I watched")]
-           ]]]
+           [:div.col (btn "/picard" "Watchlist watch" "watchlist-watch" "a video, youtube or otherwise")]]
+          [:div.row
+           [:div.col (btn "/picard" "Audiolist listen" "audiolist-listen" "a podcast or audio file")]
+           [:div.col (btn "/picard" "Book read" "book-read" "a book or ebook")]]]]
         
         (events-table req)))
 
