@@ -61,7 +61,7 @@
 
 (defn body [{:keys [cfg session] :as req} & content]
   [:body
-    [:ui.l/navbar-simple {} "Riker"]
+   [:ui.l/navbar-simple {} "Riker Dashboard"]
     [:div.container-fluid [:div.row [:div.col-lg-9 content]]]
     [:div.container-fluid
     [:footer
@@ -72,45 +72,66 @@
 
 (defn form [form-name input-name input-placeholder input-label]
   [:form {:action "/log" :method "post" :name form-name}
-   [:div.row
-    [:div.col [:label {:for input-name} input-label]]
-    [:div.col [:input {:name input-name :id input-name :placeholder input-placeholder}]] 
-    [:div.col [:input {:name "tags" :placeholder "tag1,tag2"}]] 
-    [:div.col [:button {:type "submit"} "post"]]]])
+   [:label {:for input-name} input-label]
+   [:textarea {:name input-name :id input-name :placeholder input-placeholder :rows "3" :cols "80"}] 
+   [:input {:name "tags" :placeholder "tag1,tag2"}] 
+   [:button {:type "submit"} "post"]])
+
+(defn btn
+  "Create a button link which points to a Picard log form configured for the correct event.
+   We re-use link text as the input label in the Picard form."
+  [uri text input-name input-sample]
+  [:ui.c/btn-link {:uri (str "/picard?input-name=" input-name "&input-label=" text "&input-sample=" input-sample) :text text}])
 
 (defn events-table [{{:keys [:events-limit]} :cfg}]
   [:ui.l/card {} "Latest Picard log entries"
-         [:table.table.table-striped
-          [:thead
-           [:tr
-            [:td {:scope "col"} "Event"]
-            [:td {:scope "col"} "Tags"]
-            [:td {:scope "col"} "Date-time"]]]
-          [:tbody 
-           (for [{:keys [instant ns log]} (take events-limit (reverse (picard-events))) :let [log-m (first (vals log))]]
-             [:tr
-              [:td (first (vals (:data log-m)))]
-              [:td [:ul (for [y (get-in log-m [:data :tags])] [:li y])]]
-              [:td instant]])]]])
+   [:table.table.table-striped
+    [:thead
+     [:tr
+      [:td {:scope "col"} "Event"]
+      [:td {:scope "col"} "Tags"]
+      [:td {:scope "col"} "Date-time"]]]
+    [:tbody 
+     (for [{:keys [instant ns log]} (take events-limit (reverse (picard-events))) :let [log-m (first (vals log))]]
+       [:tr
+        [:td (first (vals (:data log-m)))]
+        [:td [:ul (for [y (get-in log-m [:data :tags])] [:li y])]]
+        [:td instant]])]]])
 
 ;;;; UI Views.
 ;;;; ===========================================================================
 
 (defn home [{:keys [cfg session] :as req}]
   (page req head body
-        [:ui.l/card {} "Dashboard"
-         [:p "Details on the version, uptime, commands and events handled by Riker Bot."]
-         (form "logPersonal" "personal" "something to remember" "Personal log")
-         (form "logProfessional" "professional" "something to remember" "Professional log")
-         (form "logBookmark" "bookmark" "bookmark uri" "Bookmark log")
-         (form "logDiscoveries" "discovery" "something I discovered" "Discovery log")
-         (form "logDigitalPurchase" "digital-purchase" "a digital purchase e.g. ebook" "Digital purchase log")
-         (form "logPhysicalPurchase" "physical-purchase" "a physical purchase e.g. device" "Physical purchase log")
-         (form "logSubscriptionPurchase" "subscription-purchase" "a subscription purchase e.g. emagazine or software licence" "Subscription purchase log")
-         (form "logFilmWatch" "film-watch" "a film I watched" "Film watch log")
-         (form "logSeriesWatch" "series-watch" "a series episode I watched" "Series watch log")
-]
+        [:ui.l/card {} "Picard log"
+         [:p "The Picard log allows you to log a number of events in your life conveniently."]
+         [:div.container
+          [:div.row
+           [:div.col (btn "/picard" "Personal" "personal" "something to remember")]
+           [:div.col (btn "/picard" "Professional" "professional" "something to remember")]
+           ]
+          [:div.row
+           [:div.col (btn "/picard" "Bookmark" "bookmark" "bookmark uri")]
+           [:div.col (btn "/picard" "Discovery" "discovery" "something I discovered")]
+           ]
+          [:div.row
+           [:div.col (btn "/picard" "Digital purchase" "digital-purchase" "a digital purchase e.g. ebook")]
+           [:div.col (btn "/picard" "Physical purchase" "physical-purchase" "a physical purchase e.g. device")]
+           ]
+          [:div.row
+           [:div.col (btn "/picard" "Subscription purchase" "subscription-purchase" "a subscription purchase e.g. emagazine or software licence") ]
+           [:div.col (btn "/picard" "Film watch" "film-watch" "a film I watched") ]
+           ]
+          [:div.row
+           [:div.col (btn "/picard" "Series watch" "series-watch" "a show I watched")]
+           ]]]
+        
         (events-table req)))
+
+(defn picard [{:keys [cfg query-params session] :as req}]
+  (page req head body
+        [:ui.l/card {} "Picard log"
+         (form "log" (:input-name query-params) (:input-sample query-params) (:input-label query-params))]))
 
 ;;;; API.
 ;;;; ===========================================================================
@@ -129,8 +150,9 @@
 ;;;; Routes, service, Server and app entry point.
 ;;;; ===========================================================================
 
-(def routes #{["/"    :get  (conj ses-tor `cfg-tor `home)]
-              ["/log" :post (conj ses-tor `log)]})
+(def routes #{["/"       :get  (conj ses-tor `cfg-tor `home)]
+              ["/picard" :get (conj ses-tor `cfg-tor `picard)]
+              ["/log"    :post (conj ses-tor `log)]})
 
 (defn service-map [{:keys [port]}]
   {::http/secure-headers    {:content-security-policy-settings {:object-src "none"}}
