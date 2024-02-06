@@ -36,8 +36,12 @@
 (defn- uptime-by-unit [unit] (jt/as (jt/duration start-inst (jt/instant)) unit))
 
 (defn picard-events []
-  (let [evts-filter #{:bookmark/log :discovery/log :personal/log :professional/log}
-        events (pedestal-log->events "logs/my.log" "riker.app.core" "riker.app.core - ")] 
+  (let [today (jt/local-date)
+        yesterday (jt/minus today (jt/days 1))
+        t-log (pedestal-log->events (str "logs/riker-" today ".0.log") "riker.app.core" "riker.app.core - ")
+        y-log (pedestal-log->events (str "logs/riker-" yesterday ".0.log") "riker.app.core" "riker.app.core - ")
+        evts-filter #{:bookmark/log :discovery/log :personal/log :professional/log :digital-purchase/log :physical-purchase/log :subscription-purchase/log :film-watch/log :series-watch/log :watchlist-watch/log :audio-list/log :book-read/log}
+        events (concat y-log t-log)] 
     (filter #(some #{(first (keys (:log %)))} evts-filter) events)))
 
 ;;;; Service interceptors
