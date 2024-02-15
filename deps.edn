@@ -17,7 +17,7 @@
          babashka/fs                         {:mvn/version "0.5.20"}
          alandipert/enduro                   {:mvn/version "1.2.0"}
          net.clojars.t_d_c/hiccup-server-components {:mvn/version "0.20.0"}
-         voxmachina/omnom                    {:git/url "https://github.com/vox-machina/omnom" :git/tag "v0.1.14" :git/sha "830afc5"}
+         voxmachina/omnom                    {:git/url "https://github.com/vox-machina/omnom" :git/tag "v0.1.16" :git/sha "b8dd965"}
          voxmachina/itui                     {:git/url "https://github.com/vox-machina/itui" :git/tag "v0.2.13" :git/sha "ad7abbf"}
          }
   :aliases {
